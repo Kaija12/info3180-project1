@@ -4,10 +4,12 @@ Jinja2 Documentation:    https://jinja.palletsprojects.com/
 Werkzeug Documentation:  https://werkzeug.palletsprojects.com/
 This file contains the routes for your application.
 """
-
-from app import app
-from flask import render_template, request, redirect, url_for
-
+import os
+from app import app, db
+from flask import render_template, request, redirect, url_for, flash, current_app
+from werkzeug.utils import secure_filename
+from app.forms import PropertyForm
+from app.models import Property
 
 ###
 # Routing for your application.
@@ -22,8 +24,50 @@ def home():
 @app.route('/about/')
 def about():
     """Render the website's about page."""
-    return render_template('about.html', name="Mary Jane")
+    return render_template('about.html', name="Kaija Hall")
 
+@app.route('/properties/create', methods=['GET', 'POST'])
+def create_property():
+    form = PropertyForm()
+
+    if form.validate_on_submit():
+        # Handle file upload
+        photo_file = form.photo.data
+        filename = secure_filename(photo_file.filename)
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        os.makedirs(upload_folder, exist_ok=True)
+        photo_file.save(os.path.join(upload_folder, filename))
+
+        # Save property to database
+        new_property = Property(
+            title           = form.title.data,
+            description     = form.description.data,
+            no_of_rooms     = form.no_of_rooms.data,
+            no_of_bathrooms = form.no_of_bathrooms.data,
+            price           = form.price.data,
+            prop_type       = form.prop_type.data,
+            location        = form.location.data,
+            photo           = filename
+        )
+        db.session.add(new_property)
+        db.session.commit()
+
+        flash('Property successfully added!', 'success')
+        return redirect(url_for('properties'))
+
+    # Show form errors as flash messages if validation fails
+    flash_errors(form)
+    return render_template('create_property.html', form=form)
+
+@app.route('/properties')
+def properties():
+    all_properties = Property.query.all()
+    return render_template('properties.html', properties=all_properties)
+
+@app.route('/properties/<int:propertyid>')
+def property_detail(propertyid):
+    prop = Property.query.get_or_404(propertyid)
+    return render_template('property_detail.html', property=prop)
 
 ###
 # The functions below should be applicable to all Flask apps.

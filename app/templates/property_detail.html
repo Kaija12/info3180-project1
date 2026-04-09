@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="container mt-4">
+  <div class="card property-detail-card">
+
+    <img src="{{ url_for('static', filename='uploads/' + property.photo) }}" 
+         alt="{{ property.title }}">
+
+    <div class="card-body">
+
+      <span class="price-badge">${{ property.price }}</span>
+      <span class="type-badge">{{ property.prop_type }}</span>
+
+      <h2>{{ property.title }}</h2>
+
+      <p class="property-meta">
+        🛏 {{ property.no_of_rooms }} Bedrooms &nbsp;
+        🚿 {{ property.no_of_bathrooms }} Bathrooms
+      </p>
+
+      <p class="property-meta">📍 {{ property.location }}</p>
+
+      <p>{{ property.description }}</p>
+
+      <button class="btn-email-realtor">Email Realtor</button>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
